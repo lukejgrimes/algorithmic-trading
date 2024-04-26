@@ -15,10 +15,10 @@ async def main():
     ws = None
     while True:
         if ws is None or ws.closed:
+            strategies[1].save_data()
             api.login()
             api.get_quote_token()
             ws = await connect_to_data_stream(strategies)
-            strategies[1].save_data()
 
         try:
             message = await ws.recv()
@@ -26,7 +26,7 @@ async def main():
             if channel != 0:
                 algo = strategies[channel]
                 algo.run(bid, ask)
-                
+
         except websockets.ConnectionClosed:
             print("Connection was closed, reconnecting...")
             ws = None 
