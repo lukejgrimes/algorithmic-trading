@@ -77,7 +77,6 @@ async def on_message(ws, message):
         await ws.send(json.dumps(keep_alive))
     
     elif message["type"] == "FEED_DATA":
-        print(message)
         channel = message["channel"]
         bid = message["data"][0]["bidPrice"]
         ask = message["data"][0]["askPrice"]

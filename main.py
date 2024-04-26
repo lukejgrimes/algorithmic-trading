@@ -26,7 +26,7 @@ async def main():
             if channel != 0:
                 algo = strategies[channel]
                 algo.run(bid, ask)
-                pass
+                
         except websockets.ConnectionClosed:
             print("Connection was closed, reconnecting...")
             ws = None 
