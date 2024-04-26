@@ -15,7 +15,7 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCK24:XCBT"
-        self.price_window = deque([442.75, 442.5, 443.0, 442.5, 442.5, 442.25, 443.0, 441.75, 442.25, 442.75, 442.0, 443.25, 442.5, 440.75, 441.5, 440.75, 437.75, 437.5])
+        self.price_window = deque([438.75, 438.25, 437.0, 436.5, 438.0, 437.5, 438.0, 438.25, 437.75, 438.5, 438.75, 438.25, 438.5, 440.0, 440.0, 440.5, 441.5, 441.25])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -34,12 +34,15 @@ class ZCArima:
             self.ask = ask
             mid = bid + (ask - bid) / 2
 
-            self.prices_df.append({
+            new_row = [{
                 "timestamp": datetime.datetime.now(datetime.timezone.utc), 
                 "bid": bid,
                 "ask": ask,
                 "mid": mid
-                }, ignore_index=True)
+                }]
+            
+            self.prices_df = pd.concat([self.prices_df, pd.DataFrame(new_row)], ignore_index=True)
+
         
         else:
             return
