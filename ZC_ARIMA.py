@@ -15,7 +15,7 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCK24:XCBT"
-        self.price_window = deque([436.5, 438.0, 437.5, 438.0, 438.25, 437.75, 438.5, 438.75, 438.25, 438.5, 440.0, 440.0, 440.5, 441.5, 441.25, 441.75, 441.75, 441.75])
+        self.price_window = deque([437.5, 438.0, 438.25, 437.75, 438.5, 438.75, 438.25, 438.5, 440.0, 440.0, 440.5, 441.5, 441.25, 441.75, 441.75, 441.75, 441.75, 441.5])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
