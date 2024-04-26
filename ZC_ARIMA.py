@@ -26,7 +26,7 @@ class ZCArima:
         now = datetime.datetime.now(datetime.timezone.utc)
         self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
-        self.prices_df = pd.DataFrame(columns=["timestamp", "bid", "ask", "mid"])
+        self.prices_df = pd.DataFrame({"timestamp": [], "bid": [], "ask": [], "mid": []})
 
 
     def run(self, bid, ask):
