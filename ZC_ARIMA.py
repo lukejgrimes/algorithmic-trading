@@ -178,7 +178,7 @@ class ZCArima:
         api.login()
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
         for order in orders:
-            res = requests.post(f"/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=json.dumps(order))
+            res = requests.post(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=json.dumps(order))
             status = res.json()["data"]["order"]["status"]
             print(order)
             print(status)
@@ -186,7 +186,7 @@ class ZCArima:
     def cancel_working_orders(self):
         api.login()
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
-        res = requests.get(f"/accounts/{ACCOUNT_NUMBER}/orders/live", headers=headers)
+        res = requests.get(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/live", headers=headers)
         live_orders = res.json()["data"]["items"]
         for order in live_orders:
             if order["underlying-symbol"] != self.ticker:
