@@ -35,15 +35,13 @@ class ZCArima:
             self.ask = ask
             mid = bid + (ask - bid) / 2
 
-            new_row = [{
+            self.prices_df.iloc[len(self.prices_df)] = {
                 "timestamp": datetime.datetime.now(datetime.timezone.utc), 
                 "bid": bid,
                 "ask": ask,
                 "mid": mid
-                }]
+            }
             
-            self.prices_df = pd.concat([self.prices_df, pd.DataFrame(new_row)], ignore_index=True)
-
         
         else:
             return
