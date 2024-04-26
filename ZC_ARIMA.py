@@ -10,12 +10,13 @@ import pytz
 
 DATA_URL = "wss://tasty-openapi-ws.dxfeed.com/realtime"
 TASTY_API = "https://api.tastyworks.com"
+ZC_TICKER = "/ZCN4"
 ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCN24:XCBT"
-        self.price_window = deque([448.0, 449.5, 448.75, 447.25, 448.25, 449.0, 448.75, 450.25, 450.0, 451.25, 452.75, 452.0, 452.75, 453.0, 452.5, 452.5, 452.25, 452.5])
+        self.price_window = deque([449.5, 448.75, 447.25, 448.25, 449.0, 448.75, 450.25, 450.0, 451.25, 452.75, 452.0, 452.75, 453.0, 452.5, 452.5, 452.25, 452.5, 452.25])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -57,7 +58,7 @@ class ZCArima:
             self.price_window.popleft()
 
             positions = api.get_positions()
-            self.position = positions.get("/ZCK4", 0)
+            self.position = positions.get(ZC_TICKER, 0)
 
             next_return = self.predict(self.returns_window)
             print(f"NEXT RETURN: {next_return}")
@@ -74,7 +75,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": self.position,
                                 "action": "Buy to Close"
                             }
@@ -89,7 +90,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": 1,
                                 "action": "Buy to Open"
                             }
@@ -105,7 +106,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": 1,
                                 "action": "Buy to Open"
                             }
@@ -123,7 +124,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": self.position,
                                 "action": "Sell to Close"
                             }
@@ -138,7 +139,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": 1,
                                 "action": "Sell to Open"
                             }
@@ -153,7 +154,7 @@ class ZCArima:
                         "legs": [
                             {
                                 "instrument-type": "Future",
-                                "symbol": "/ZCK4",
+                                "symbol": ZC_TICKER,
                                 "quantity": 1,
                                 "action": "Sell to Open"
                             }
