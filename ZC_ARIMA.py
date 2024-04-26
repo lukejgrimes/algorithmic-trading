@@ -35,7 +35,7 @@ class ZCArima:
             self.ask = ask
             mid = bid + (ask - bid) / 2
 
-            self.prices_df.iloc[len(self.prices_df)] = {
+            self.prices_df.loc[len(self.prices_df)] = {
                 "timestamp": datetime.datetime.now(datetime.timezone.utc), 
                 "bid": bid,
                 "ask": ask,
