@@ -178,8 +178,8 @@ class ZCArima:
         api.login()
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
         for order in orders:
-            res = requests.post(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=json.dumps(order))
-            print(res)
+            res = requests.post(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=order)
+            print(res.json())
             print(order)
 
     def cancel_working_orders(self):
