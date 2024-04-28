@@ -16,7 +16,7 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCN24:XCBT"
-        self.price_window = deque([450.25, 450.0, 451.25, 452.75, 452.0, 452.75, 453.0, 452.5, 452.5, 452.25, 452.5, 452.25, 452.25, 451.5, 451.5, 451.0, 451.5, 451.75])
+        self.price_window = deque([453.0, 452.5, 452.5, 452.25, 452.5, 452.25, 452.25, 451.5, 451.5, 451.0, 451.5, 451.75, 451.75, 452.0, 453.25, 453.25, 450.0, 450.25])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -67,14 +67,12 @@ class ZCArima:
                 if self.position < 0:
                     orders.append({
                         "time-in-force": "Day",
-                        "price": self.ask,
-                        "price-effect": "Debit",
-                        "order-type": "Limit",
+                        "order-type": "Market",
                         "legs": [
                             {
                                 "instrument-type": "Future",
                                 "symbol": ZC_TICKER,
-                                "quantity": self.position,
+                                "quantity": 1,
                                 "action": "Buy to Close"
                             }
                         ]
@@ -116,14 +114,12 @@ class ZCArima:
                 if self.position > 0:
                     orders.append({
                         "time-in-force": "Day",
-                        "price": self.ask,
-                        "price-effect": "Credit",
-                        "order-type": "Limit",
+                        "order-type": "Market",
                         "legs": [
                             {
                                 "instrument-type": "Future",
                                 "symbol": ZC_TICKER,
-                                "quantity": self.position,
+                                "quantity": 1,
                                 "action": "Sell to Close"
                             }
                         ]
