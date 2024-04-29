@@ -16,7 +16,7 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCN24:XCBT"
-        self.price_window = deque([453.0, 452.5, 452.5, 452.25, 452.5, 452.25, 452.25, 451.5, 451.5, 451.0, 451.5, 451.75, 451.75, 452.0, 453.25, 453.25, 450.0, 450.25])
+        self.price_window = deque([451.75, 452.0, 453.25, 453.25, 450.0, 450.25, 450.75, 449.75, 450.25, 450.5, 450.25, 450.75, 449.75, 449.75, 449.75, 450.0, 449.75, 449.25])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -188,7 +188,7 @@ class ZCArima:
 
             status = order["status"]
             if status == "Received" or status == "Routed" or status == "In Flight" or status == "Live":
-                res = requests.put(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/{order['id']}") 
+                res = requests.delete(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/{order['id']}") 
                 print(res)
 
     def is_trading_hour(self):
