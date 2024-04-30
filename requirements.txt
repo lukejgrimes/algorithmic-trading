@@ -2,7 +2,6 @@ requests
 pandas
 numpy
 websockets
-asyncio
-json
 pytz
 datetime
+yfinance

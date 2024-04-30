@@ -5,8 +5,8 @@ import datetime
 import api
 import requests
 import os
-import json
 import pytz
+import yfinance as yf
 
 DATA_URL = "wss://tasty-openapi-ws.dxfeed.com/realtime"
 TASTY_API = "https://api.tastyworks.com"
@@ -16,7 +16,10 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCN24:XCBT"
-        self.price_window = deque([451.75, 452.0, 453.25, 453.25, 450.0, 450.25, 450.75, 449.75, 450.25, 450.5, 450.25, 450.75, 449.75, 449.75, 449.75, 450.0, 449.75, 449.25])
+        zc = yf.Ticker("ZC=F")
+        price_history = zc.history(period="1mo", interval="1h")
+        self.price_window = deque(list(price_history["Close"])[-1:-19:-1][::-1])
+        # self.price_window = deque([451.75, 452.0, 453.25, 453.25, 450.0, 450.25, 450.75, 449.75, 450.25, 450.5, 450.25, 450.75, 449.75, 449.75, 449.75, 450.0, 449.75, 449.25])
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -27,6 +30,8 @@ class ZCArima:
         self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
         self.prices_df = pd.DataFrame({"timestamp": [], "bid": [], "ask": [], "mid": []})
+
+        self.market_tz = pytz.timezone('America/Chicago')
 
 
     def run(self, bid, ask):
@@ -47,6 +52,7 @@ class ZCArima:
             return
 
         if datetime.datetime.now(datetime.timezone.utc) >= self.next_trade_hour:
+            print(datetime.datetime.now())
             self.cancel_working_orders()
             now = datetime.datetime.now(datetime.timezone.utc)
             self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
@@ -60,6 +66,8 @@ class ZCArima:
 
             next_return = self.predict(self.returns_window)
             print(f"NEXT RETURN: {next_return}")
+
+            order_type = "Market" if 8 <= now.astimezone(self.market_tz) <= 10 else "Limit"
 
             orders = []
 
@@ -82,7 +90,7 @@ class ZCArima:
                         "time-in-force": "Day",
                         "price": self.bid,
                         "price-effect": "Debit",
-                        "order-type": "Limit",
+                        "order-type": order_type,
                         "legs": [
                             {
                                 "instrument-type": "Future",
@@ -98,7 +106,7 @@ class ZCArima:
                         "time-in-force": "Day",
                         "price": self.bid,
                         "price-effect": "Debit",
-                        "order-type": "Limit",
+                        "order-type": order_type,
                         "legs": [
                             {
                                 "instrument-type": "Future",
@@ -129,7 +137,7 @@ class ZCArima:
                         "time-in-force": "Day",
                         "price": self.ask,
                         "price-effect": "Credit",
-                        "order-type": "Limit",
+                        "order-type": order_type,
                         "legs": [
                             {
                                 "instrument-type": "Future",
@@ -144,7 +152,7 @@ class ZCArima:
                         "time-in-force": "Day",
                         "price": self.ask,
                         "price-effect": "Credit",
-                        "order-type": "Limit",
+                        "order-type": order_type,
                         "legs": [
                             {
                                 "instrument-type": "Future",
@@ -170,7 +178,6 @@ class ZCArima:
         return next_return
     
     def trade(self, orders):
-        api.login()
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
         for order in orders:
             res = requests.post(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=order)
@@ -178,12 +185,11 @@ class ZCArima:
             print(order)
 
     def cancel_working_orders(self):
-        api.login()
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
         res = requests.get(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/live", headers=headers)
         live_orders = res.json()["data"]["items"]
         for order in live_orders:
-            if order["underlying-symbol"] != self.ticker:
+            if order["underlying-symbol"] != ZC_TICKER:
                 continue
 
             status = order["status"]
@@ -192,13 +198,13 @@ class ZCArima:
                 print(res)
 
     def is_trading_hour(self):
-        market_tz = pytz.timezone('America/Chicago')
+        self.market_tz = pytz.timezone('America/Chicago')
         night_start = datetime.time(hour=19, minute=0)
         night_end = datetime.time(hour=7, minute=45)
         day_start = datetime.time(hour=8, minute=30)
         day_end = datetime.time(hour=13, minute=20)
         now_utc = datetime.datetime.now(datetime.timezone.utc)
-        now_local = now_utc.astimezone(market_tz)
+        now_local = now_utc.astimezone(self.market_tz)
         today = now_local.weekday()
 
         is_weekday = today < 5  
