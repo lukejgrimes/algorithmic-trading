@@ -55,6 +55,7 @@ class ZCArima:
             return
 
         if datetime.datetime.now(datetime.timezone.utc) >= self.next_trade_hour:
+            api.login()
             print(datetime.datetime.now())
             self.cancel_working_orders()
             now = datetime.datetime.now(datetime.timezone.utc)

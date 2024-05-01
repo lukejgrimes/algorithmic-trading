@@ -23,10 +23,8 @@ async def main():
             message = await ws.recv()
             channel, bid, ask = await datastream.on_message(ws, json.loads(message))
             if channel != 0:
-                api.login()
                 algo = strategies[channel]
                 algo.run(bid, ask)
-                strategies[1].save_data()
 
         except websockets.ConnectionClosed:
             print("Connection was closed, reconnecting...")
