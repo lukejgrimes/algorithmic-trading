@@ -15,7 +15,6 @@ async def main():
     ws = None
     while True:
         if ws is None or ws.closed:
-            strategies[1].save_data()
             api.login()
             api.get_quote_token()
             ws = await connect_to_data_stream(strategies)

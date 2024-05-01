@@ -16,10 +16,15 @@ ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 class ZCArima:
     def __init__(self):
         self.ticker = "/ZCN24:XCBT"
+        self.market_tz = pytz.timezone('America/Chicago')
+
         zc = yf.Ticker("ZC=F")
         price_history = zc.history(period="1mo", interval="1h")
-        self.price_window = deque(list(price_history["Close"])[-1:-19:-1][::-1])
-        # self.price_window = deque([451.75, 452.0, 453.25, 453.25, 450.0, 450.25, 450.75, 449.75, 450.25, 450.5, 450.25, 450.75, 449.75, 449.75, 449.75, 450.0, 449.75, 449.25])
+        if self.is_trading_hour():
+            self.price_window = deque(list(price_history["Close"])[-2:-20:-1][::-1])
+        else: 
+            self.price_window = deque(list(price_history["Close"])[-1:-19:-1][::-1])
+
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
         self.cur_bid = self.price_window[-1]
@@ -30,8 +35,6 @@ class ZCArima:
         self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
         self.prices_df = pd.DataFrame({"timestamp": [], "bid": [], "ask": [], "mid": []})
-
-        self.market_tz = pytz.timezone('America/Chicago')
 
 
     def run(self, bid, ask):
@@ -67,7 +70,7 @@ class ZCArima:
             next_return = self.predict(self.returns_window)
             print(f"NEXT RETURN: {next_return}")
 
-            order_type = "Market" if 8 <= now.astimezone(self.market_tz) <= 10 else "Limit"
+            order_type = "Market" if 8 <= now.astimezone(self.market_tz).hour <= 10 else "Limit"
 
             orders = []
 
