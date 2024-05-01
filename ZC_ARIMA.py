@@ -11,6 +11,7 @@ import yfinance as yf
 DATA_URL = "wss://tasty-openapi-ws.dxfeed.com/realtime"
 TASTY_API = "https://api.tastyworks.com"
 ZC_TICKER = "/ZCN4"
+UNDERLYING_SYMBOL = "/ZC"
 ACCOUNT_NUMBER = os.getenv("ACCOUNT_NUMBER")
 
 class ZCArima:
@@ -56,7 +57,7 @@ class ZCArima:
 
         if datetime.datetime.now(datetime.timezone.utc) >= self.next_trade_hour:
             api.login()
-            print(datetime.datetime.now())
+            print(datetime.datetime.now().astimezone(self.market_tz))
             self.cancel_working_orders()
             now = datetime.datetime.now(datetime.timezone.utc)
             self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
@@ -89,37 +90,69 @@ class ZCArima:
                             }
                         ]
                     })
-                
-                    orders.append({
-                        "time-in-force": "Day",
-                        "price": self.bid,
-                        "price-effect": "Debit",
-                        "order-type": order_type,
-                        "legs": [
-                            {
-                                "instrument-type": "Future",
-                                "symbol": ZC_TICKER,
-                                "quantity": 1,
-                                "action": "Buy to Open"
-                            }
-                        ]
-                    })
+
+                    if order_type == "Limit":
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "price": self.bid,
+                            "price-effect": "Debit",
+                            "order-type": "Limit",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Buy to Open"
+                                }
+                            ]
+                        })
+                    else:
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "order-type": "Market",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Buy to Open"
+                                }
+                            ]
+                        })
 
                 elif self.position == 0:
-                    orders.append({
-                        "time-in-force": "Day",
-                        "price": self.bid,
-                        "price-effect": "Debit",
-                        "order-type": order_type,
-                        "legs": [
-                            {
-                                "instrument-type": "Future",
-                                "symbol": ZC_TICKER,
-                                "quantity": 1,
-                                "action": "Buy to Open"
-                            }
-                        ]
-                    })
+                    if order_type == "Limit":
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "price": self.bid,
+                            "price-effect": "Debit",
+                            "order-type": "Limit",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Buy to Open"
+                                }
+                            ]
+                        })
+                    else:
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "order-type": "Market",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Buy to Open"
+                                }
+                            ]
+                        })
 
         
             elif next_return < 0:
@@ -137,35 +170,70 @@ class ZCArima:
                         ]
                     })
 
-                    orders.append({
-                        "time-in-force": "Day",
-                        "price": self.ask,
-                        "price-effect": "Credit",
-                        "order-type": order_type,
-                        "legs": [
-                            {
-                                "instrument-type": "Future",
-                                "symbol": ZC_TICKER,
-                                "quantity": 1,
-                                "action": "Sell to Open"
-                            }
-                        ]
-                    })
+                    if order_type == "Limit":
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "price": self.ask,
+                            "price-effect": "Credit",
+                            "order-type": "Limit",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Sell to Open"
+                                }
+                            ]
+                        })
+                    else:
+
+                        orders.append({
+                            "time-in-force": "Day",
+                            "order-type": "Market",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Sell to Open"
+                                }
+                            ]
+                        })
+
+
+
                 elif self.position == 0:
-                    orders.append({
-                        "time-in-force": "Day",
-                        "price": self.ask,
-                        "price-effect": "Credit",
-                        "order-type": order_type,
-                        "legs": [
-                            {
-                                "instrument-type": "Future",
-                                "symbol": ZC_TICKER,
-                                "quantity": 1,
-                                "action": "Sell to Open"
-                            }
-                        ]
-                    })
+                    if order_type == "Limit":
+                        orders.append({
+                            "time-in-force": "Day",
+                            "price": self.ask,
+                            "price-effect": "Credit",
+                            "order-type": "Limit",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Sell to Open"
+                                }
+                            ]
+                        })
+                    
+                    else:
+                        orders.append({
+                            "time-in-force": "Day",
+                            "order-type": "Market",
+                            "legs": [
+                                {
+                                    "instrument-type": "Future",
+                                    "symbol": ZC_TICKER,
+                                    "quantity": 1,
+                                    "action": "Sell to Open"
+                                }
+                            ]
+                        })
+
 
             self.trade(orders)
 
@@ -193,7 +261,7 @@ class ZCArima:
         res = requests.get(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/live", headers=headers)
         live_orders = res.json()["data"]["items"]
         for order in live_orders:
-            if order["underlying-symbol"] != ZC_TICKER:
+            if order["underlying-symbol"] != UNDERLYING_SYMBOL:
                 continue
 
             status = order["status"]
