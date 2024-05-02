@@ -266,7 +266,7 @@ class ZWArima:
 
             status = order["status"]
             if status == "Received" or status == "Routed" or status == "In Flight" or status == "Live":
-                res = requests.delete(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/{int(order['id'])}") 
+                res = requests.delete(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders/{order['id']}", headers=headers) 
                 print(res.json())
 
     def is_trading_hour(self):
