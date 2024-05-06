@@ -7,6 +7,7 @@ import requests
 import os
 import pytz
 import yfinance as yf
+import time
 
 DATA_URL = "wss://tasty-openapi-ws.dxfeed.com/realtime"
 TASTY_API = "https://api.tastyworks.com"
@@ -255,6 +256,7 @@ class ZCArima:
             res = requests.post(f"{TASTY_API}/accounts/{ACCOUNT_NUMBER}/orders", headers=headers, json=order)
             print(res.json())
             print(order)
+            time.sleep(1)
 
     def cancel_working_orders(self):
         headers = {"Authorization": os.getenv("SESSION_TOKEN")}
