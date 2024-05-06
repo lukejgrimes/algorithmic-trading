@@ -22,9 +22,9 @@ class ZCArima:
         zc = yf.Ticker("ZC=F")
         price_history = zc.history(period="1mo", interval="1h")
         if self.is_trading_hour():
-            self.price_window = deque(list(price_history["Close"])[-2:-20:-1][::-1])
+            self.price_window = deque(list(price_history["Close"])[-2:-13:-1][::-1])
         else: 
-            self.price_window = deque(list(price_history["Close"])[-1:-19:-1][::-1])
+            self.price_window = deque(list(price_history["Close"])[-1:-12:-1][::-1])
 
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
         self.preds_window = []
@@ -241,8 +241,8 @@ class ZCArima:
         
 
     def predict(self, prev_returns):
-        next_return = -0.027017222271711123
-        ar_coef = [-0.10433543565158056, -0.006098515054023878, -0.10823116461351842, -0.13969271500432726, 0.016371819883228406, -0.007764408643629614, -0.042714924767569065, -0.03182387574302226, 0.04321009401969834, -0.021595934551837313, 0.04475933684340608, -0.09544543833122922, 0.036680877107984185, 0.0014720893197936267, -0.013495873774031721, 0.050600988995831056, -0.028509802057009412]
+        next_return = -0.028981497326160434
+        ar_coef = [0.15494185346861913, 0.20442032212528188, 0.10899240667718338, 0.04594915455301834, -0.08022025458277479, -0.029929707039411384, -0.09731107859531843, -0.27025322094876075, -0.48674478620344525, -0.6472852846507117]
 
         for i in range(len(ar_coef)):
             next_return += ar_coef[i] * prev_returns[i] 
