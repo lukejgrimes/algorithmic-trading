@@ -77,7 +77,7 @@ class ZCArima:
 
             orders = []
 
-            if next_return > 0:
+            if next_return > 1:
                 if self.position < 0:
                     orders.append({
                         "time-in-force": "Day",
@@ -156,7 +156,7 @@ class ZCArima:
                         })
 
         
-            elif next_return < 0:
+            elif next_return < -1:
                 if self.position > 0:
                     orders.append({
                         "time-in-force": "Day",
@@ -234,6 +234,34 @@ class ZCArima:
                                 }
                             ]
                         })
+            else:
+                if self.position < 0:
+                    orders.append({
+                        "time-in-force": "Day",
+                        "order-type": "Market",
+                        "legs": [
+                            {
+                                "instrument-type": "Future",
+                                "symbol": ZC_TICKER,
+                                "quantity": 1,
+                                "action": "Buy to Close"
+                            }
+                        ]
+                    })
+                
+                elif self.position > 0:
+                    orders.append({
+                        "time-in-force": "Day",
+                        "order-type": "Market",
+                        "legs": [
+                            {
+                                "instrument-type": "Future",
+                                "symbol": ZC_TICKER,
+                                "quantity": 1,
+                                "action": "Sell to Close"
+                            }
+                        ]
+                    })
 
 
             self.trade(orders)
