@@ -77,7 +77,7 @@ class ZCArima:
 
             orders = []
 
-            if next_return > 1:
+            if next_return > 1.5:
                 if self.position < 0:
                     orders.append({
                         "time-in-force": "Day",
@@ -156,7 +156,7 @@ class ZCArima:
                         })
 
         
-            elif next_return < -1:
+            elif next_return < -1.5:
                 if self.position > 0:
                     orders.append({
                         "time-in-force": "Day",
