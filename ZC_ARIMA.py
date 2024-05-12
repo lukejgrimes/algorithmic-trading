@@ -28,7 +28,7 @@ class ZCArima:
             self.price_window = deque(list(price_history["Close"])[-1:-12:-1][::-1])
 
         self.returns_window = deque(list(pd.Series(self.price_window).diff())[1:])
-        self.preds_window = []
+
         self.cur_bid = self.price_window[-1]
         self.cur_ask = self.price_window[-1]
         self.position = 0
@@ -37,6 +37,25 @@ class ZCArima:
         self.next_trade_hour = now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
         self.prices_df = pd.DataFrame({"timestamp": [], "bid": [], "ask": [], "mid": []})
+
+        # Initialize errors
+        params = [-0.03989741086091598, 0.09020869178680388, -0.03480772257627403, 0.07337154335323164, -0.15359008022708612, -0.16986430816085393, -0.27562040533977544, -0.3810855380157071, -0.7716921090030674, 0.2293468888184709]
+        errors = [0.8817592801823446, -0.8844764634374324]
+        self.errors = deque([0, 0])
+
+        self.last_pred = 0
+
+        prices = zc.history(period="1mo", interval="1h")["Close"]
+        returns = list(prices.tail(len(params) + len(errors) + 1).diff())[1:] if not self.is_trading_hour() else list(prices.tail(len(params) + len(errors) + 2).diff())[1:]
+        for i in range(len(errors)):
+          cnst = -0.026420116770311416
+          for j in range(len(params)):
+            cnst += params[j] * returns[j + i]
+
+          for j in range(len(errors)):
+            cnst += errors[j] * self.errors[j]
+
+          self.errors[i] = returns[i + len(params)] - cnst
 
 
     def run(self, bid, ask):
@@ -66,11 +85,14 @@ class ZCArima:
             self.returns_window.popleft()
             self.price_window.append(mid)
             self.price_window.popleft()
+            self.errors.append(self.returns_window[-1] - self.last_pred)
+            self.errors.popleft()
 
             positions = api.get_positions()
             self.position = positions.get(ZC_TICKER, 0)
 
-            next_return = self.predict(self.returns_window)
+            next_return = self.predict(self.returns_window, self.errors)
+            self.last_pred = next_return
             print(f"NEXT RETURN: {next_return}")
 
             order_type = "Market" if 8 <= now.astimezone(self.market_tz).hour <= 10 else "Limit"
@@ -269,12 +291,16 @@ class ZCArima:
         return
         
 
-    def predict(self, prev_returns):
-        next_return = -0.028981497326160434
-        ar_coef = [0.15494185346861913, 0.20442032212528188, 0.10899240667718338, 0.04594915455301834, -0.08022025458277479, -0.029929707039411384, -0.09731107859531843, -0.27025322094876075, -0.48674478620344525, -0.6472852846507117]
+    def predict(self, prev_returns, prev_errors):
+        next_return = -0.026420116770311416
+        ar_coef = [-0.03989741086091598, 0.09020869178680388, -0.03480772257627403, 0.07337154335323164, -0.15359008022708612, -0.16986430816085393, -0.27562040533977544, -0.3810855380157071, -0.7716921090030674, 0.2293468888184709]
+        err_coef = [0.8817592801823446, -0.8844764634374324]
 
         for i in range(len(ar_coef)):
-            next_return += ar_coef[i] * prev_returns[i] 
+            next_return += ar_coef[i] * prev_returns[i]
+
+        for i in range(len(err_coef)):
+            next_return += err_coef[i] * prev_errors[i]
 
         return next_return
     
